@@ -1,10 +1,24 @@
+#
+# Makefile of RubbiSH
+# Keiya Chinen <s1011420@coins.tsukuba.ac.jp>
+#
 CFLAGS ?= -O3
 CFLAGS += -Wall -g
+
+# debug RubbishGC
+#CFLAGS += -DRGCDEBUG
+
+# address sanitizer
+CFLAGS += -fsanitize=address
+
 FLAGS  := $(CFLAGS) $(LDFLAGS)
 YACC   = bison
 
-rubbish: semantic.o parser.o rubbish.o
+rubbish: semantic.o parser.o rubbish.o rubgc.o
 	$(CC) $(FLAGS) $^ -lreadline -o $@
+
+rubgc.o: rubgc.c
+	$(CC) $(FLAGS) -c $^ -o $@
 
 rubbish.o: rubbish.c
 	$(CC) $(FLAGS) -c $^ -o $@
@@ -17,4 +31,4 @@ parser.o: parser.y lexer.c
 	$(CC) $(FLAGS) -c parser.c -o $@
 
 clean:
-	rm parser.c
+	rm parser.c *.o

@@ -1,78 +1,108 @@
+/*
+ * Keiya Chinen
+ * s1011420@coins.tsukuba.ac.jp
+ * */
 #include "rubbish.h"
-#define BUFSZ 8
-#define MAX_HISTORY_NO 3
-#define MAX(x, y) (((x) > (y)) ? (x) : (y))
-#define MIN(x, y) (((x) < (y)) ? (x) : (y))
+#include "rubgc.h"
 int yylex()
 {
 	printf("yylex(%d): %s\n",input_cur,input);
+	int input_sz = strlen(input) + 1;
 
-	char buf[BUFSZ];
+	//char buf[BUFSZ];
+	char *buf;
+	buf = (char *)rgc_malloc(gc_ctx, input_sz);
 
-	int sz = strlen(input);
 	// < > | |& >> () & && ||
 	int j = 0;
+	int retval = yacc_EOF;
 	while (input[input_cur] != '\0'){
 		switch (input[input_cur])
 		{
+			case '#':
+				do
+				{
+					input_cur++;
+				}
+				while(input[input_cur] != '\0');
+				retval = '\n'; goto BREAK;
 			case '>': /* > >> */
-				if (input_cur+1 < sz && input[input_cur+1])
+				printf("[L]got >\n");
+				if (input_cur+1 < input_sz && input[input_cur+1])
 				{
 					switch (input[input_cur+1])
 					{
 						case '>':
-							return STDOUT_APPEND;
+							input_cur += 2;
+							retval = STDOUT_APPEND; goto BREAK;
 						default:
-							return '>';
+							input_cur++;
+							retval = '>'; goto BREAK;
 					}
 				}
 			case '<':
-				return '<';
+				printf("[L]got <\n");
+				input_cur++;
+				retval = '<'; goto BREAK;
 			case '|': /* | || |& */
-				if (input_cur+1 < sz && input[input_cur+1])
+				if (input_cur+1 < input_sz && input[input_cur+1])
 				{
 					switch (input[input_cur+1])
 					{
 						case '|':
-							return CND_OR;
+							input_cur += 2;
+							retval = CND_OR; goto BREAK;
 						case '&':
-							return PIPE_STDERR;
+							input_cur += 2;
+							retval = PIPE_STDERR; goto BREAK;
 						default:
-							return PIPE_STDOUT;
+							input_cur++;
+							retval = '|'; goto BREAK;
 					}
 				}
 			case '(':
-				return '(';
+				input_cur++;
+				retval = '('; goto BREAK;
 			case ')':
-				return ')';
+				input_cur++;
+				retval = ')'; goto BREAK;
 			case '&': /* & && */
-				if (input_cur+1 < sz && input[input_cur+1])
+				if (input_cur+1 < input_sz && input[input_cur+1])
 				{
 					switch (input[input_cur+1])
 					{
 						case '&':
-							return CND_AND;
+							input_cur += 2;
+							retval = CND_AND; goto BREAK;
 						default:
-							return '&';
+							input_cur++;
+							retval = '&'; goto BREAK;
 					}
 				}
+			case ' ':
+				input_cur++;
+				continue;
 			default:
 				j=0;
 				while(isalpha(input[input_cur]))
 				{
-					if (input_cur >= BUFSZ - 1) break;
-					buf[j] = input[input_cur];
-					j++;
+					if (j < input_sz - 1) {
+						buf[j] = input[input_cur];
+						j++;
+					}
 					input_cur++;
 				}
 				buf[j] = '\0';
-				printf("lex:buf='%s'\n",buf);
-				return WORD;
+				printf("lex:buf='%s' %p\n",buf,buf);
+				yylval.element = word_element(buf);
+				retval = WORD; goto BREAK;
 		}
 		input_cur++;
 	}
-	printf("input end\n");
-	return '\n';
+BREAK:
+	/* end of token, return to bison */
+	printf("[L]token end\n");
+	return retval;
 	/*
 	char *buf;
 	buf = malloc( BUFSZ );
