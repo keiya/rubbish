@@ -66,10 +66,12 @@ operation:
 redirection:
 		'>' WORD
 			{
+printf(">we gotcha!\n");
 				$$ = redirection($2,REDIR_STDOUT,0);
 			}
 	|	'<' WORD
 			{
+printf("<we gotcha!\n");
 				$$ = redirection($2,REDIR_STDIN,0);
 			}
 	|	STDOUT_APPEND WORD

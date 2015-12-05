@@ -84,7 +84,8 @@ int yylex()
 				continue;
 			default:
 				j=0;
-				while(isalpha(input[input_cur]))
+				//while(isalpha(input[input_cur]))
+				while(input[input_cur] && input[input_cur] != ' ')
 				{
 					if (j < input_sz - 1) {
 						buf[j] = input[input_cur];

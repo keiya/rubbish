@@ -45,9 +45,19 @@ COMMAND* element_command(ELEMENT *elem, COMMAND *srccmd)
 		return c;
 	}
 
-	srccmd->next = (COMMAND *)rgc_malloc(gc_ctx, sizeof(COMMAND));
-	srccmd->next->elem = elem;
-	printf("[S]element_command(concat)->%p\n",srccmd->next);
+	COMMAND *next,*last;
+	last = srccmd;
+	next = srccmd->next;
+	while (next != NULL)
+	{
+		last = next;
+		next = next->next;
+	}
+
+	next = (COMMAND *)rgc_malloc(gc_ctx, sizeof(COMMAND));
+	next->elem = elem;
+	printf("[S]element_command(concat)->%p\n",next);
+	last->next = next;
 	return srccmd;
 }
 

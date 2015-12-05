@@ -14,8 +14,12 @@ CFLAGS += -fsanitize=address
 FLAGS  := $(CFLAGS) $(LDFLAGS)
 YACC   = bison
 
-rubbish: semantic.o parser.o rubbish.o rubgc.o
+
+rubbish: execute.o semantic.o parser.o rubbish.o rubgc.o
 	$(CC) $(FLAGS) $^ -lreadline -o $@
+
+execute.o: execute.c
+	$(CC) $(FLAGS) -c $^ -o $@
 
 rubgc.o: rubgc.c
 	$(CC) $(FLAGS) -c $^ -o $@
