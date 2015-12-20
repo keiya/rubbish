@@ -66,12 +66,10 @@ operation:
 redirection:
 		'>' WORD
 			{
-printf(">we gotcha!\n");
 				$$ = redirection($2,REDIR_STDOUT,0);
 			}
 	|	'<' WORD
 			{
-printf("<we gotcha!\n");
 				$$ = redirection($2,REDIR_STDIN,0);
 			}
 	|	STDOUT_APPEND WORD
@@ -93,13 +91,10 @@ redirection_list:
 simple_command_element:
 		WORD
 		{
-			printf("[Y]simple_command_element->WORD %p %p\n",$$,$1);
-			//$$ = element_command($1);
 			$$ = $1;
 		}
 	|	redirection
 		{
-			printf("[Y]simple_command_element->redirection %p %p\n",$$,$1);
 			$$ = redirect_element($1);
 		}
 	;
@@ -117,18 +112,17 @@ simple_command:
 
 command:
 		simple_command
-		{ printf("[Y]command->simple_command %p\n",$1); }
 	;
 
 pipeline:
 		pipeline '|' newlines pipeline
+		{ $$ = create_pipeline($1,$4); }
 	|	pipeline PIPE_STDERR newlines pipeline
 	|	command
 	;
 
 operation_terminator:
 		'\n'
-		{ printf("[Y]operation_terminator->'\\n'\n"); }
 	|	yacc_EOF
 	;
 

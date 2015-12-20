@@ -9,31 +9,15 @@
 #include <stdio.h>
 #include "rubgc.h"
 
-/*
-COMMAND *command_str(char *str)
-{
-	COMMAND *cmd;
-	cmd = malloc( sizeof(COMMAND) );
-	char *buf;
-	buf = malloc( strlen(str) );
-	if( buf == NULL )
-	{
-		perror("malloc()");
-		exit( -1 );
-	}
-	cmd->str = buf;
-	return cmd;
-}
-*/
 ELEMENT* word_element(char *str)
 {
 	ELEMENT *e;
 	e = (ELEMENT *)rgc_malloc(gc_ctx, sizeof(ELEMENT));
 	e->word = (char *)rgc_malloc(gc_ctx, strlen(str)+1);
 	strcpy(e->word,str);
-	printf("WE:%p <<<<<<<\n",e);
 	return e;
 }
+
 COMMAND* element_command(ELEMENT *elem, COMMAND *srccmd)
 {
 	if (srccmd == NULL)
@@ -63,10 +47,8 @@ COMMAND* element_command(ELEMENT *elem, COMMAND *srccmd)
 
 REDIRECT* redirection(ELEMENT *e, int fd, int append)
 {
-	printf("REDIR:%p\n",e);
 	REDIRECT *r;
 	r = (REDIRECT *)rgc_malloc(gc_ctx, sizeof(REDIRECT));
-	printf("[S]redirection->%p\n",r);
 	r->file = (char *)rgc_malloc(gc_ctx, strlen(e->word)+1);
 	strcpy(r->file,e->word);
 	r->fd = fd;
@@ -81,4 +63,24 @@ ELEMENT* redirect_element(REDIRECT *r)
 	e = (ELEMENT *)rgc_malloc(gc_ctx, sizeof(ELEMENT));
 	e->redirect = r;
 	return e;
+}
+
+COMMAND* create_pipeline(COMMAND *from, COMMAND *to)
+{
+	COMMAND *tail;
+	tail = from;
+	while (tail->next != NULL)
+	{
+		tail = tail->next;
+		printf("tail = %p\n",tail);
+	}
+
+	COMMAND *c;
+	c = (COMMAND *)rgc_malloc(gc_ctx, sizeof(COMMAND));
+	c->next = to;
+	c->flag = PROC_PIPE;
+
+	tail->next = c;
+	
+	return from;
 }

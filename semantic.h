@@ -7,19 +7,13 @@ enum optype
 };
 enum opflag
 {
-	/* type: file */
-	/*
-	FILE_STIN          = 1 << 0,
-	FILE_STOUT_CREAT   = 1 << 1,
-	FILE_STOUT_APPEND  = 2 << 2,
-	*/
-
 	PROC_BACKGROUND    = 1 << 3,
 	PROC_PIPE          = 1 << 4,
 
 	COND_AND           = 1 << 5,
 	COND_OR            = 1 << 6
 };
+
 enum redirect_fd
 {
 	REDIR_STDIN  = 0,
@@ -30,9 +24,9 @@ enum redirect_fd
 typedef struct _command {
 	struct _command *next;  /* list structure (pipe connection,command parameters,etc..) */
 	struct _element *elem;  /* command which excuted */
-	struct _redirect *rein;
-	struct _redirect *reout;
-	struct _redirect *reerr;
+//	struct _redirect *rein;
+//	struct _redirect *reout;
+//	struct _redirect *reerr;
 	enum optype type;
 	enum opflag flag;
 } COMMAND;
@@ -58,3 +52,4 @@ extern void* gc_ctx;
 
 REDIRECT* redirection(ELEMENT *, int, int);
 ELEMENT* redirect_element(REDIRECT *);
+COMMAND* create_pipeline(COMMAND *, COMMAND *);

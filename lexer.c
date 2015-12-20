@@ -12,6 +12,7 @@ int yylex()
 	//char buf[BUFSZ];
 	char *buf;
 	buf = (char *)rgc_malloc(gc_ctx, input_sz);
+	buf[0] = '\0';
 
 	// < > | |& >> () & && ||
 	int j = 0;
@@ -85,14 +86,35 @@ int yylex()
 			default:
 				j=0;
 				//while(isalpha(input[input_cur]))
-				while(input[input_cur] && input[input_cur] != ' ')
+				while(input[input_cur])
 				{
+					switch (input[input_cur])
+					{
+						/* keyword(command,filename) does not contain these tokens: */
+						case ' ':
+						case '&':
+						case '*':
+						case '(':
+						case ')':
+						case '\\':
+						case ';':
+						case '\'':
+						case '"':
+						case '<':
+						case '>':
+						case '?':
+						case '[':
+						case ']':
+						case '|':
+							goto END_KEYWORD;
+					}
 					if (j < input_sz - 1) {
 						buf[j] = input[input_cur];
 						j++;
 					}
 					input_cur++;
 				}
+END_KEYWORD:
 				buf[j] = '\0';
 				printf("lex:buf='%s' %p\n",buf,buf);
 				yylval.element = word_element(buf);
@@ -104,53 +126,6 @@ BREAK:
 	/* end of token, return to bison */
 	printf("[L]token end\n");
 	return retval;
-	/*
-	char *buf;
-	buf = malloc( BUFSZ );
-	if( buf == NULL )
-	{
-		perror("malloc()");
-		exit( -1 );
-	}
-
-	char prompt[128] = "";
-	int history_no = 0;
-	HIST_ENTRY *history = NULL;
-	char *line;
-	char *unescaped_line;
-	unescaped_line = malloc(128);
-	unescaped_line[0] = '\0';
-	int continuous_line = 0;
-		int i;
-		int j=0;
-		int c;
-		// char loop
-		for (i=0; line[i] != '\0'; ++i)
-		{
-			c = line[i];
-			//if (isspace(c))
-			//	continue;
-			char *c2 = line;
-			int k=0;
-			do {
-				printf("  [a]%s\n",c2[k]);
-			} while(isalpha(c2[k]));
-			if (j < BUFSZ - 1)
-				buf[j++] = line[i];
-			printf("%d(%d):%c\n",i,j,c);
-		}
-		printf("#%s\n",line);
-		add_history(line);
-		if (++history_no > MAX_HISTORY_NO)
-		{
-			history = remove_history(0);
-			free(history);
-		}
-		printf(">%s\n",buf);
-		yylval.command = command_str(buf);
-		return WORD;
-	}
-	*/
 }
 
 int yyerror()
