@@ -6,7 +6,6 @@
 #include "rubgc.h"
 int yylex()
 {
-	printf("yylex(%d): %s\n",input_cur,input);
 	int input_sz = strlen(input) + 1;
 
 	//char buf[BUFSZ];
@@ -28,7 +27,6 @@ int yylex()
 				while(input[input_cur] != '\0');
 				retval = '\n'; goto BREAK;
 			case '>': /* > >> */
-				printf("[L]got >\n");
 				if (input_cur+1 < input_sz && input[input_cur+1])
 				{
 					switch (input[input_cur+1])
@@ -42,7 +40,6 @@ int yylex()
 					}
 				}
 			case '<':
-				printf("[L]got <\n");
 				input_cur++;
 				retval = '<'; goto BREAK;
 			case '|': /* | || |& */
@@ -116,7 +113,6 @@ int yylex()
 				}
 END_KEYWORD:
 				buf[j] = '\0';
-				printf("lex:buf='%s' %p\n",buf,buf);
 				yylval.element = word_element(buf);
 				retval = WORD; goto BREAK;
 		}
@@ -124,7 +120,6 @@ END_KEYWORD:
 	}
 BREAK:
 	/* end of token, return to bison */
-	printf("[L]token end\n");
 	return retval;
 }
 

@@ -15,7 +15,7 @@ FLAGS  := $(CFLAGS) $(LDFLAGS)
 YACC   = bison
 
 
-rubbish: execute.o semantic.o parser.o rubbish.o rubgc.o
+rubbish: execute.o semantic.o shellcmd.o parser.o rubbish.o rubgc.o
 	$(CC) $(FLAGS) $^ -lreadline -o $@
 
 execute.o: execute.c
@@ -28,6 +28,9 @@ rubbish.o: rubbish.c
 	$(CC) $(FLAGS) -c $^ -o $@
 
 semantic.o: semantic.c
+	$(CC) $(FLAGS) -c $^ -o $@
+
+shellcmd.o: shellcmd.c
 	$(CC) $(FLAGS) -c $^ -o $@
 
 parser.o: parser.y lexer.c

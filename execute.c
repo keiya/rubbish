@@ -1,3 +1,8 @@
+/*
+ * execute.c
+ * process management (pipeline,redirection,fork-exec)
+ * Keiya Chinen <s1011420@coins.tsukuba.ac.jp>
+ * */
 #include <stdio.h>
 #include <stdlib.h>
 #include <fcntl.h>
@@ -7,6 +12,7 @@
 #include "semantic.h"
 #include "execute.h"
 #include "rubgc.h"
+#include "shellcmd.h"
 
 #define MAX_ARGS_CNT 100
 extern char **environ;
@@ -199,6 +205,12 @@ void forkexec(CMD_CHAIN *cmdchain)
 			else break;
 		}
 
+		// try to run shell command (exit,cd, etc...)
+		if (try_shellcmd(args[0]))
+		{
+			return;
+		}
+
 		if (cmdchain->pipe) // command stdout => pipeline
 		{
 			int pipefd[2];
@@ -280,55 +292,4 @@ void forkexec(CMD_CHAIN *cmdchain)
 		else break;
 	}
 	return;
-	//if (_chain == NULL) return;
-	//CMD_CHAIN *chain;
-	//chain = _chain;
-
-	//char **args;
-	//args = (char *)rgc_malloc(gc_ctx, MAX_ARGS_CNT);
-	//int argcnt = 0;
-	//while(1)
-	//{
-	//	if (chain->next != NULL)
-	//		chain = chain->next;
-	//	else break;
-
-	//	if (chain->ran != 0) continue; // already excuted
-
-	//	if (chain->prev != NULL) /* not header */
-	//	{
-	//	printf("> %s (%d) [%d] # %p <= %p => %p\n",chain->word,chain->pipe,chain->prev->pipe,chain->prev,chain,chain->next);
-	//	}
-
-	//	args[argcnt] = (char *)rgc_malloc(gc_ctx,strlen(chain->word)+1);
-	//	strcpy(args[argcnt],chain->word);
-	//	argcnt++;
-
-	//	chain->ran = 1;
-	//}
-	//if (argcnt == 0) return;
-
-	//int pipefd[2];
-	//if (chain->pipe) // command stdout => pipeline
-	//{
-	//	if (pipe(pipefd) < 0)
-	//	{
-	//		perror("pipe");
-	//		exit(1);
-	//	}
-	//	chain->pipefd[0] = pipefd[0];
-	//	chain->pipefd[1] = pipefd[1];
-	//}
-	//
-
-
-	//if (cpid != 0) /* Parent */
-	//{
-	//	int status;
-	//	// parent
-	//	if (waitpid(-1,&status,WUNTRACED) < 0)
-	//	{
-	//		perror("waitpid");
-	//	}
-	//}
 }
