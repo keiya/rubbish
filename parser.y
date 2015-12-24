@@ -26,17 +26,14 @@ start:
 		operations operation_terminator
 		{
 			parsed_semantic = $1;
-			printf("[Y]ope+term %p\n",$1);
 			YYACCEPT;
 		}
 	|	'\n'
 		{
-			printf("[Y]accepted by \\n\n");
 			YYACCEPT;
 		}
 	|	yacc_EOF
 		{
-			printf("[Y]accepted by EOF\n");
 			YYACCEPT;
 		}
 	;
@@ -58,9 +55,6 @@ operation:
 	|	operation '&' operation
 	|	operation ';' operation
 	|	pipeline
-			{
-				printf("[Y]operation->pipeline\n");
-			}
 	;
 
 redirection:

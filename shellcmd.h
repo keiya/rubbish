@@ -1,1 +1,1 @@
-int try_shellcmd(char *);
+int try_shellcmd(char **);

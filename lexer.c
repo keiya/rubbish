@@ -2,6 +2,7 @@
  * Keiya Chinen
  * s1011420@coins.tsukuba.ac.jp
  * */
+#include <string.h>
 #include "rubbish.h"
 #include "rubgc.h"
 int yylex()
@@ -123,7 +124,7 @@ BREAK:
 	return retval;
 }
 
-int yyerror()
+void yyerror()
 {
 	fprintf(stderr,"Syntax error\n");
 }

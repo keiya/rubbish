@@ -8,6 +8,9 @@ CFLAGS += -Wall -g
 # debug RubbishGC
 #CFLAGS += -DRGCDEBUG
 
+# debug runner
+#CFLAGS += -DDEBUG
+
 # address sanitizer
 CFLAGS += -fsanitize=address
 
@@ -15,17 +18,24 @@ FLAGS  := $(CFLAGS) $(LDFLAGS)
 YACC   = bison
 
 
-rubbish: execute.o semantic.o shellcmd.o parser.o rubbish.o rubgc.o
+rubbish: cwd.o execute.o parser.o rubbish.o rubgc.o semantic.o shellcmd.o utility.o
 	$(CC) $(FLAGS) $^ -lreadline -o $@
 
+cwd.o: cwd.c
+	$(CC) $(FLAGS) -c $^ -o $@
+
 execute.o: execute.c
+	$(CC) $(FLAGS) -c $^ -o $@
+
+rubbish.o: rubbish.c
 	$(CC) $(FLAGS) -c $^ -o $@
 
 rubgc.o: rubgc.c
 	$(CC) $(FLAGS) -c $^ -o $@
 
-rubbish.o: rubbish.c
-	$(CC) $(FLAGS) -c $^ -o $@
+parser.o: parser.y lexer.c
+	$(YACC) -o parser.c parser.y
+	$(CC) $(FLAGS) -c parser.c -o $@
 
 semantic.o: semantic.c
 	$(CC) $(FLAGS) -c $^ -o $@
@@ -33,9 +43,8 @@ semantic.o: semantic.c
 shellcmd.o: shellcmd.c
 	$(CC) $(FLAGS) -c $^ -o $@
 
-parser.o: parser.y lexer.c
-	$(YACC) -o parser.c parser.y
-	$(CC) $(FLAGS) -c parser.c -o $@
+utility.o: utility.c
+	$(CC) $(FLAGS) -c $^ -o $@
 
 clean:
 	rm parser.c *.o

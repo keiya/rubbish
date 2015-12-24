@@ -25,7 +25,6 @@ COMMAND* element_command(ELEMENT *elem, COMMAND *srccmd)
 		COMMAND *c;
 		c = (COMMAND *)rgc_malloc(gc_ctx, sizeof(COMMAND));
 		c->elem = elem;
-		printf("[S]element_command(new)->%p (got %p)\n",c,elem);
 		return c;
 	}
 
@@ -40,7 +39,6 @@ COMMAND* element_command(ELEMENT *elem, COMMAND *srccmd)
 
 	next = (COMMAND *)rgc_malloc(gc_ctx, sizeof(COMMAND));
 	next->elem = elem;
-	printf("[S]element_command(concat)->%p\n",next);
 	last->next = next;
 	return srccmd;
 }
@@ -72,7 +70,6 @@ COMMAND* create_pipeline(COMMAND *from, COMMAND *to)
 	while (tail->next != NULL)
 	{
 		tail = tail->next;
-		printf("tail = %p\n",tail);
 	}
 
 	COMMAND *c;

@@ -7,10 +7,13 @@
 #include "semantic.h"
 #include <readline/readline.h>
 #include <readline/history.h>
+#include <signal.h>
+#include <unistd.h>
 #include "rubbish.h"
 #include "rubgc.h"
-#include <signal.h>
 #include "execute.h"
+#include "cwd.h"
+
 #define MAX_HISTORY_CNT 3
 #define MAX_ARGS_CNT 100
 
@@ -23,8 +26,10 @@ void *gc_ctx;
 
 void sigint_action(int signum, siginfo_t *info, void *ctx)
 {
+#ifdef DEBUG
 	printf("sigint_handler(%d): signo(%d) code(0x%x)\n",
 		signum, info->si_signo, info->si_code);
+#endif
 }
 
 void set_sighandler()
@@ -57,10 +62,10 @@ int main()
 	set_sighandler();
 
 	show_prompt(prompt);
-	while (input = readline(prompt))
+	cwd_init();
+	while ( (input = readline(prompt)) )
 	{
 		gc_ctx = rgc_init();
-		show_prompt(prompt);
 
 		/* add to readline history */
 		add_history(input);
@@ -71,6 +76,7 @@ int main()
 
 		/* execute */
 		run(parsed_semantic);
+		show_prompt(prompt);
 		parsed_semantic = NULL; /* clear old semantic (abstract syntax) */
 
 		rgc_free_all(gc_ctx); /* RubbishGC clean up. free all allocated memory */

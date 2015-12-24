@@ -44,7 +44,9 @@ void child_redirect(REDIRECT_IOS *redios)
 {
 	if (redios->infile != NULL)
 	{
+#ifdef DEBUG
 		printf("  in(%s)",redios->infile);
+#endif
 		int in;
 		in = open(redios->infile,O_RDONLY);
 		create_redir(in, 0);
@@ -52,7 +54,9 @@ void child_redirect(REDIRECT_IOS *redios)
 
 	if (redios->outfile != NULL)
 	{
+#ifdef DEBUG
 		printf("  out(%s)",redios->outfile);
+#endif
 		int out;
 		if (redios->outappend == 1)
 			out = open(redios->outfile,
@@ -67,7 +71,9 @@ void child_redirect(REDIRECT_IOS *redios)
 
 	if (redios->errfile != NULL)
 	{
+#ifdef DEBUG
 		printf("  err(%s)",redios->errfile);
+#endif
 		int out;
 		if (redios->errappend == 1)
 			out = open(redios->errfile,
@@ -92,10 +98,15 @@ void run(COMMAND* _cmd)
 	ELEM_CHAIN *elemchain_tail;
 	elemchain_tail = cmdchain->elem;
 
+	//REDIRECT_IOS *redios;
+	//redios = (REDIRECT_IOS *)rgc_malloc(gc_ctx, sizeof(REDIRECT_IOS));
+
 	COMMAND *cmd = _cmd;
  	while(cmd != NULL)
 	{
+#ifdef DEBUG
 		printf("running:%p (optype:%d;opflag:%d)\n",cmd,cmd->type,cmd->flag);
+#endif
 
 		// pipe?
 		if (cmd->flag & PROC_PIPE)
@@ -112,47 +123,48 @@ void run(COMMAND* _cmd)
 
 		if (cmd->elem != NULL)
 		{
-			REDIRECT_IOS *redios;
-			redios = (REDIRECT_IOS *)rgc_malloc(gc_ctx, sizeof(REDIRECT_IOS));
 			if (cmd->elem->redirect != NULL)
 			{
 				REDIRECT *redir;
 				redir = cmd->elem->redirect;
+				if (cmdchain->redios == NULL)
+					cmdchain->redios = (REDIRECT_IOS *)rgc_malloc(gc_ctx, sizeof(REDIRECT_IOS));
 				do {
+#ifdef DEBUG
 					printf("  redirection (next:%p;file:'%s';fd:%d;app:%d)\n",
 								redir->next,
 								redir->file,
 								redir->fd,
 								redir->stdout_append
 								);
+#endif
 					switch (redir->fd)
 					{
 						case 0:
 							//tail_chain->infile = (char *)rgc_malloc(gc_ctx, strlen(redir->file)+1);
 							//strcpy(tail_chain->infile,redir->file);
 							//tail_chain->infile = redir->file;
-							redios->infile = redir->file;
+							cmdchain->redios->infile = redir->file;
 							break;
 						case 1:
 							//tail_chain->outfile = (char *)rgc_malloc(gc_ctx, strlen(redir->file)+1);
 							//strcpy(tail_chain->outfile,redir->file);
 							//tail_chain->outfile = redir->file;
 							//tail_chain->outappend = redir->stdout_append;
-							redios->outfile = redir->file;
-							redios->outappend = redir->stdout_append;
+							cmdchain->redios->outfile = redir->file;
+							cmdchain->redios->outappend = redir->stdout_append;
 							break;
 						case 2:
 							//tail_chain->errfile = (char *)rgc_malloc(gc_ctx, strlen(redir->file)+1);
 							//strcpy(tail_chain->errfile,redir->file);
 							//tail_chain->errfile = redir->file;
 							//tail_chain->errappend = redir->stdout_append;
-							redios->errfile = redir->file;
-							redios->outappend = redir->stdout_append;
+							cmdchain->redios->errfile = redir->file;
+							cmdchain->redios->outappend = redir->stdout_append;
 							break;
 					}
 				}
 				while ((redir = redir->next) !=NULL);
-				cmdchain->redios = redios;
 			}
 			else
 			{
@@ -166,14 +178,6 @@ void run(COMMAND* _cmd)
 	}
 	forkexec(cmdchain_head);
 
-	/* Parent */
-	int status;
-	// parent
-	if (waitpid(-1,&status,0) < 0)
-	{
-		perror("waitpid");
-	}
-
 }
 
 /* arg:
@@ -185,8 +189,10 @@ void forkexec(CMD_CHAIN *cmdchain)
 {
 	while (1)
 	{
+#ifdef DEBUG
 		printf("cmd @ %p (%p<-prev|next->%p)\n  elem:%p\n  elemcnt:%d\n  pipe:%d\n  pipefd[0]:%d\n  pipefd[1]:%d\n  redios:%p\n",cmdchain,
 						cmdchain->prev,cmdchain->next,cmdchain->elem,cmdchain->elem_cnt,cmdchain->pipe,cmdchain->pipefd[0],cmdchain->pipefd[1],cmdchain->redios);
+#endif
 		ELEM_CHAIN *elemchain = cmdchain->elem;
 
 		char **args;
@@ -194,8 +200,10 @@ void forkexec(CMD_CHAIN *cmdchain)
 		int i;
 		for (i=0; i<cmdchain->elem_cnt;i++)
 		{
+#ifdef DEBUG
 			printf("  elem(%d) @ %p (next->%p)\n    word:%s\n",i,cmdchain,
 							elemchain->next,elemchain->word);
+#endif
 
 			//args[i] = (char *)rgc_malloc(gc_ctx,strlen(elemchain->word)+1);
 			//strcpy(args[i],elemchain->word);
@@ -206,7 +214,7 @@ void forkexec(CMD_CHAIN *cmdchain)
 		}
 
 		// try to run shell command (exit,cd, etc...)
-		if (try_shellcmd(args[0]))
+		if (try_shellcmd(args))
 		{
 			return;
 		}
@@ -259,7 +267,7 @@ void forkexec(CMD_CHAIN *cmdchain)
 			}
 	
 			if (cmdchain->redios != NULL)
-			child_redirect(cmdchain->redios);
+				child_redirect(cmdchain->redios);
 	
 			//printf("\n");
 	
@@ -272,15 +280,15 @@ void forkexec(CMD_CHAIN *cmdchain)
 		}
 		else /* Parent */
 		{
+#ifdef DEBUG
 		printf("[PARENT] fork %d\n",cpid);
+#endif
 			if (cmdchain->pipe)
 			{
-				printf("[PARENT](current)close %d\n",cmdchain->pipefd[1]);
 				close(cmdchain->pipefd[1]); /* close child-side fd */
 			}
 			if (cmdchain->prev != NULL&&cmdchain->prev->pipe)
 			{
-				printf("[PARENT](prev)close %d\n",cmdchain->prev->pipefd[0]);
 				close(cmdchain->prev->pipefd[0]);
 			}
 		}
@@ -291,5 +299,11 @@ void forkexec(CMD_CHAIN *cmdchain)
 			cmdchain = cmdchain->next;
 		else break;
 	}
-	return;
+	/* Parent */
+	int status;
+	// parent
+	if (waitpid(-1,&status,0) < 0)
+	{
+		perror("waitpid");
+	}
 }
