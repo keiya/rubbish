@@ -12,13 +12,13 @@ CFLAGS += -Wall -g
 #CFLAGS += -DDEBUG
 
 # address sanitizer
-CFLAGS += -fsanitize=address
+#CFLAGS += -fsanitize=address
 
 FLAGS  := $(CFLAGS) $(LDFLAGS)
 YACC   = bison
 
 
-rubbish: cwd.o execute.o parser.o rubbish.o rubgc.o semantic.o shellcmd.o utility.o
+rubbish: cwd.o execute.o parser.o rubbish.o rubgc.o semantic.o shellcmd.o
 	$(CC) $(FLAGS) $^ -lreadline -o $@
 
 cwd.o: cwd.c
@@ -41,9 +41,6 @@ semantic.o: semantic.c
 	$(CC) $(FLAGS) -c $^ -o $@
 
 shellcmd.o: shellcmd.c
-	$(CC) $(FLAGS) -c $^ -o $@
-
-utility.o: utility.c
 	$(CC) $(FLAGS) -c $^ -o $@
 
 clean:

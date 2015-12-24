@@ -2,6 +2,8 @@ RubbiSH
 =========
 
 ## implementation design
+* cwd.c
+  * handle current directory (cd)
 * execute.c
   * process management
 * lexer.c
@@ -15,3 +17,5 @@ RubbiSH
   * memory management
 * semantic.c
   * functions that generate abstract syntax
+* shellcmd.c
+  * internal shell commands

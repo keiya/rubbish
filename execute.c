@@ -3,6 +3,7 @@
  * process management (pipeline,redirection,fork-exec)
  * Keiya Chinen <s1011420@coins.tsukuba.ac.jp>
  * */
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <fcntl.h>
@@ -98,9 +99,6 @@ void run(COMMAND* _cmd)
 	ELEM_CHAIN *elemchain_tail;
 	elemchain_tail = cmdchain->elem;
 
-	//REDIRECT_IOS *redios;
-	//redios = (REDIRECT_IOS *)rgc_malloc(gc_ctx, sizeof(REDIRECT_IOS));
-
 	COMMAND *cmd = _cmd;
  	while(cmd != NULL)
 	{
@@ -112,7 +110,6 @@ void run(COMMAND* _cmd)
 		if (cmd->flag & PROC_PIPE)
 		{
 			cmdchain->pipe = 1;
-			//forkexec(cmdchain_head);
 			cmdchain->next = (CMD_CHAIN *)rgc_malloc(gc_ctx, sizeof(CMD_CHAIN));
 			cmdchain->next->prev = cmdchain;
 			cmdchain = cmdchain->next;
@@ -141,24 +138,13 @@ void run(COMMAND* _cmd)
 					switch (redir->fd)
 					{
 						case 0:
-							//tail_chain->infile = (char *)rgc_malloc(gc_ctx, strlen(redir->file)+1);
-							//strcpy(tail_chain->infile,redir->file);
-							//tail_chain->infile = redir->file;
 							cmdchain->redios->infile = redir->file;
 							break;
 						case 1:
-							//tail_chain->outfile = (char *)rgc_malloc(gc_ctx, strlen(redir->file)+1);
-							//strcpy(tail_chain->outfile,redir->file);
-							//tail_chain->outfile = redir->file;
-							//tail_chain->outappend = redir->stdout_append;
 							cmdchain->redios->outfile = redir->file;
 							cmdchain->redios->outappend = redir->stdout_append;
 							break;
 						case 2:
-							//tail_chain->errfile = (char *)rgc_malloc(gc_ctx, strlen(redir->file)+1);
-							//strcpy(tail_chain->errfile,redir->file);
-							//tail_chain->errfile = redir->file;
-							//tail_chain->errappend = redir->stdout_append;
 							cmdchain->redios->errfile = redir->file;
 							cmdchain->redios->outappend = redir->stdout_append;
 							break;
@@ -177,7 +163,6 @@ void run(COMMAND* _cmd)
 		cmd = cmd->next;
 	}
 	forkexec(cmdchain_head);
-
 }
 
 /* arg:
@@ -204,9 +189,6 @@ void forkexec(CMD_CHAIN *cmdchain)
 			printf("  elem(%d) @ %p (next->%p)\n    word:%s\n",i,cmdchain,
 							elemchain->next,elemchain->word);
 #endif
-
-			//args[i] = (char *)rgc_malloc(gc_ctx,strlen(elemchain->word)+1);
-			//strcpy(args[i],elemchain->word);
 			args[i] = elemchain->word;
 			if (elemchain->next != NULL)
 				elemchain = elemchain->next;
@@ -242,9 +224,6 @@ void forkexec(CMD_CHAIN *cmdchain)
 			/* pipe out (stdout) */
 			if (cmdchain->pipe)
 			{
-			//printf("[CHILD][OUT] close=%d dup2(%d,%d)\n"
-			//				,cmdchain->pipefd[0]
-			//				,cmdchain->pipefd[1],1);
 				close(cmdchain->pipefd[0]); /* close parent-side fd */
 				if (dup2(cmdchain->pipefd[1], 1)<0) /* pipefd[1] -> stdout */
 				{
@@ -256,9 +235,6 @@ void forkexec(CMD_CHAIN *cmdchain)
 			/* pipe in (stdin) */
 			if (cmdchain->prev!=NULL&&cmdchain->prev->pipe)
 			{
-			//printf("[CHILD][IN] close=%d dup2(%d,%d)\n"
-			//				,cmdchain->prev->pipefd[1]
-			//				,cmdchain->prev->pipefd[0],0);
 				if (dup2(cmdchain->prev->pipefd[0], 0)<0) /*  -> stdin */
 				{
 					perror("dup2");
@@ -269,9 +245,6 @@ void forkexec(CMD_CHAIN *cmdchain)
 			if (cmdchain->redios != NULL)
 				child_redirect(cmdchain->redios);
 	
-			//printf("\n");
-	
-			//printf("EXECVP:%s %p %p\n",args[0],args,args[0]);
 			if (execvp(args[0], args) == -1)
 			{
 				perror("exec");
@@ -293,17 +266,15 @@ void forkexec(CMD_CHAIN *cmdchain)
 			}
 		}
 
-
-
 		if (cmdchain->next != NULL)
 			cmdchain = cmdchain->next;
 		else break;
 	}
 	/* Parent */
-	int status;
-	// parent
-	if (waitpid(-1,&status,0) < 0)
-	{
-		perror("waitpid");
+	int pid;
+	while (pid = waitpid(-1, NULL, 0)) {
+	   if (errno == ECHILD) {
+	      break;
+	   }
 	}
 }
