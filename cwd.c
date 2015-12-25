@@ -9,7 +9,6 @@
 #include <limits.h>
 #include <unistd.h>
 #include "cwd.h"
-#include "utility.h"
 
 char root_path[PATH_MAX+1];
 char cwd_path[PATH_MAX+1];
